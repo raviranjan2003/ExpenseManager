@@ -68,17 +68,35 @@ jobs:
       # ----------------------------
       # Copy files to EC2
       # ----------------------------
-      - name: Copy files to EC2 via SCP
+      #- name: Copy files to EC2 via SCP
+      #  uses: appleboy/scp-action@v0.1.7
+       # with:
+        #  host: ${{ secrets.EC2_HOST }}
+         # username: ${{ secrets.EC2_USER }}
+         # key: ${{ secrets.EC2_SSH_KEY }}
+         # source: |
+         #   frontend/dist
+         #   backend
+         # target: /var/www
+      - name: Copy frontend build output to EC2
         uses: appleboy/scp-action@v0.1.7
         with:
           host: ${{ secrets.EC2_HOST }}
           username: ${{ secrets.EC2_USER }}
           key: ${{ secrets.EC2_SSH_KEY }}
           source: |
-            frontend/dist/*
-            backend/*
-          target: /var/www
-
+            frontend/dist
+          target: /var/www/frontend
+        
+      - name: Copy backend files to EC2
+        uses: appleboy/scp-action@v0.1.7
+        with:
+          host: ${{ secrets.EC2_HOST }}
+          username: ${{ secrets.EC2_USER }}
+          key: ${{ secrets.EC2_SSH_KEY }}
+          source: |
+            backend
+          target: /var/www/backend
       # ----------------------------
       # Deploy on EC2
       # ----------------------------
@@ -89,23 +107,26 @@ jobs:
           username: ${{ secrets.EC2_USER }}
           key: ${{ secrets.EC2_SSH_KEY }}
           script: |
-            # Create directories if not exist
-            mkdir -p /var/www/frontend
-            mkdir -p /var/www/backend
-
-            # Clean old files
-            rm -rf /var/www/frontend/*
-            rm -rf /var/www/backend/*
-
-            # Copy frontend build output and backend files from staging
-            cp -r /var/www/frontend/dist/* /var/www/frontend/ || true
-            cp -r /var/www/backend/* /var/www/backend/ || true
-
-            # Install backend deps (safety)
-            cd /var/www/backend
-            npm install --production
-
-            # Restart app using PM2
-            pm2 delete app || true
-            pm2 start server.js --name app
-            pm2 save
+            echo "Starting deployment..." 
+            
+            # FRONTEND SETUP 
+            # Move build output to final location 
+            if [ -d "/var/www/frontend/dist" ]; then 
+              cp -r /var/www/frontend/dist/* /var/www/frontend/ || true 
+              rm -rf /var/www/frontend/dist 
+            fi 
+            
+            if [ -d "/var/www/frontend/build" ]; then 
+              cp -r /var/www/frontend/build/* /var/www/frontend/ || true 
+              rm -rf /var/www/frontend/build 
+            fi 
+            
+            # BACKEND SETUP 
+            cd /var/www/backend 
+            npm install --production 
+            
+            # Restart backend with PM2 
+            pm2 delete app || true 
+            pm2 start server.js --name app 
+            pm2 save 
+            echo "Deployment completed successfully"
