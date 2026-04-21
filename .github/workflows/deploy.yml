@@ -86,7 +86,7 @@ jobs:
           key: ${{ secrets.EC2_SSH_KEY }}
           source: |
             frontend/dist
-          target: /var/www
+          target: /var/www/frontend
         
       - name: Copy backend files to EC2
         uses: appleboy/scp-action@v0.1.7
@@ -96,7 +96,7 @@ jobs:
           key: ${{ secrets.EC2_SSH_KEY }}
           source: |
             backend
-          target: /var/www
+          target: /var/www/backend
       # ----------------------------
       # Deploy on EC2
       # ----------------------------
