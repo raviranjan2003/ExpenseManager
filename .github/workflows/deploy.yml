@@ -42,6 +42,29 @@ jobs:
         working-directory: ./backend
         run: npm install --production
 
+      - name: Debug build output
+        run: |
+          echo "Listing Frontend build output:"
+          ls -la frontend/build || echo "No build output"
+
+          echo "Listing backend directory:"
+          ls -la backend || echo "No backend directory"
+
+      - name: Test SSH Connection
+        uses: appleboy/ssh-action@v1.0.3
+        with:
+          host: ${{ secrets.EC2_HOST }}
+          username: ${{ secrets.EC2_USER }}
+          key: ${{ secrets.EC2_SSH_KEY }}
+          script: |
+            echo "SSH connection successful"
+
+      - name: Verify Secrets
+        run: |
+          if [ -z "${{ secrets.EC2_HOST }}" ]; then echo "EC2_HOST is missing"; else echo "EC2_HOST OK"; fi
+          if [ -z "${{ secrets.EC2_USER }}" ]; then echo "EC2_USER is missing"; else echo "EC2_USER OK"; fi
+          if [ -z "${{ secrets.EC2_SSH_KEY }}" ]; then echo "EC2_SSH_KEY is missing"; else echo "EC2_SSH_KEY OK"; fi
+
       # ----------------------------
       # Copy files to EC2
       # ----------------------------
