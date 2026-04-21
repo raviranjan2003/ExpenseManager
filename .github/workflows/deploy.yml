@@ -45,7 +45,7 @@ jobs:
       - name: Debug build output
         run: |
           echo "Listing Frontend build output:"
-          ls -la frontend/build || echo "No build output"
+          ls -la frontend/dist || echo "No build output"
 
           echo "Listing backend directory:"
           ls -la backend || echo "No backend directory"
@@ -77,7 +77,7 @@ jobs:
           source: |
             frontend/dist/*
             backend/*
-          target: /tmp/expense-tracker-deploy
+          target: /var/www
 
       # ----------------------------
       # Deploy on EC2
@@ -98,8 +98,8 @@ jobs:
             rm -rf /var/www/backend/*
 
             # Copy frontend build output and backend files from staging
-            cp -r /tmp/expense-tracker-deploy/frontend/dist/* /var/www/frontend/
-            cp -r /tmp/expense-tracker-deploy/backend/* /var/www/backend/
+            cp -r /var/www/frontend/dist/* /var/www/frontend/ || true
+            cp -r /var/www/backend/* /var/www/backend/ || true
 
             # Install backend deps (safety)
             cd /var/www/backend
