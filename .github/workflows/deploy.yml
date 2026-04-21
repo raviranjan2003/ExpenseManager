@@ -1,80 +1,89 @@
 name: Deploy to EC2
 
 on:
-  push:
-    branches:
-      - master
+push:
+branches:
+- master
 
 jobs:
-  build-and-deploy:
-    runs-on: ubuntu-latest
+deploy:
+runs-on: ubuntu-latest
 
-    steps:
-      - name: Checkout Code
-        uses: actions/checkout@v4
 
-      # --------------------
-      # FRONTEND BUILD
-      # --------------------
-      - name: Setup Node
-        uses: actions/setup-node@v4
-        with:
-          node-version: 18
+steps:
+  # ----------------------------
+  # Checkout code
+  # ----------------------------
+  - name: Checkout repository
+    uses: actions/checkout@v4
 
-      - name: Install Frontend Dependencies
-        working-directory: frontend
-        run: npm install
+  # ----------------------------
+  # Setup Node.js
+  # ----------------------------
+  - name: Setup Node
+    uses: actions/setup-node@v4
+    with:
+      node-version: 18
 
-      - name: Build Frontend
-        working-directory: frontend
-        run: npm run build
+  # ----------------------------
+  # Build Frontend
+  # ----------------------------
+  - name: Install frontend dependencies
+    working-directory: ./frontend
+    run: npm install
 
-      # --------------------
-      # BACKEND PREP
-      # --------------------
-      - name: Install Backend Dependencies
-        working-directory: backend
-        run: npm install --production
+  - name: Build frontend
+    working-directory: ./frontend
+    run: npm run build
 
-      # --------------------
-      # DEPLOY VIA SCP + SSH
-      # --------------------
-      - name: Copy files to EC2
-        uses: appleboy/scp-action@v0.1.7
-        with:
-          host: ${{ secrets.EC2_HOST }}
-          username: ${{ secrets.EC2_USER }}
-          key: ${{ secrets.EC2_SSH_KEY }}
-          source: |
-            frontend/dist/*
-            backend/*
-          target: ${{ secrets.APP_DIR }}
+  # ----------------------------
+  # Prepare Backend
+  # ----------------------------
+  - name: Install backend dependencies
+    working-directory: ./backend
+    run: npm install --production
 
-      - name: SSH and Restart App
-        uses: appleboy/ssh-action@v1.0.3
-        with:
-          host: ${{ secrets.EC2_HOST }}
-          username: ${{ secrets.EC2_USER }}
-          key: ${{ secrets.EC2_SSH_KEY }}
-          script: |
-            set -e
+  # ----------------------------
+  # Copy files to EC2
+  # ----------------------------
+  - name: Copy files to EC2 via SCP
+    uses: appleboy/scp-action@v0.1.7
+    with:
+      host: ${{ secrets.EC2_HOST }}
+      username: ${{ secrets.EC2_USER }}
+      key: ${{ secrets.EC2_SSH_KEY }}
+      source: |
+        frontend/build/*
+        backend/*
+      target: /var/www
 
-            # APP_DIR should be something like /var/www/app
-            # scp-action will place files under:
-            #   $APP_DIR/frontend/dist/*
-            #   $APP_DIR/backend/*
-            cd "${{ secrets.APP_DIR }}"
+  # ----------------------------
+  # Deploy on EC2
+  # ----------------------------
+  - name: Deploy via SSH
+    uses: appleboy/ssh-action@v1.0.3
+    with:
+      host: ${{ secrets.EC2_HOST }}
+      username: ${{ secrets.EC2_USER }}
+      key: ${{ secrets.EC2_SSH_KEY }}
+      script: |
+        # Create directories if not exist
+        mkdir -p /var/www/frontend
+        mkdir -p /var/www/backend
 
-            # Refresh frontend serving directory
-            rm -rf /var/www/frontend/*
-            cp -r frontend/dist/* /var/www/frontend/
+        # Clean old files
+        rm -rf /var/www/frontend/*
+        rm -rf /var/www/backend/*
 
-            # Refresh backend directory
-            rm -rf /var/www/backend/*
-            cp -r backend/* /var/www/backend/
+        # Move new files
+        cp -r /var/www/frontend/build/* /var/www/frontend/ || true
+        cp -r /var/www/backend/* /var/www/backend/ || true
 
-            cd /var/www/backend
+        # Install backend deps (safety)
+        cd /var/www/backend
+        npm install --production
 
-            pm2 delete app || true
-            pm2 start server.js --name app
-            pm2 save
+        # Restart app using PM2
+        pm2 delete app || true
+        pm2 start index.js --name app
+        pm2 save
