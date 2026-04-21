@@ -1,89 +1,88 @@
 name: Deploy to EC2
 
 on:
-push:
-branches:
-- master
+  push:
+    branches:
+      - master
 
 jobs:
-deploy:
-runs-on: ubuntu-latest
+  deploy:
+    runs-on: ubuntu-latest
 
+    steps:
+      # ----------------------------
+      # Checkout code
+      # ----------------------------
+      - name: Checkout repository
+        uses: actions/checkout@v4
 
-steps:
-  # ----------------------------
-  # Checkout code
-  # ----------------------------
-  - name: Checkout repository
-    uses: actions/checkout@v4
+      # ----------------------------
+      # Setup Node.js
+      # ----------------------------
+      - name: Setup Node
+        uses: actions/setup-node@v4
+        with:
+          node-version: 18
 
-  # ----------------------------
-  # Setup Node.js
-  # ----------------------------
-  - name: Setup Node
-    uses: actions/setup-node@v4
-    with:
-      node-version: 18
+      # ----------------------------
+      # Build Frontend
+      # ----------------------------
+      - name: Install frontend dependencies
+        working-directory: ./frontend
+        run: npm install
 
-  # ----------------------------
-  # Build Frontend
-  # ----------------------------
-  - name: Install frontend dependencies
-    working-directory: ./frontend
-    run: npm install
+      - name: Build frontend
+        working-directory: ./frontend
+        run: npm run build
 
-  - name: Build frontend
-    working-directory: ./frontend
-    run: npm run build
+      # ----------------------------
+      # Prepare Backend
+      # ----------------------------
+      - name: Install backend dependencies
+        working-directory: ./backend
+        run: npm install --production
 
-  # ----------------------------
-  # Prepare Backend
-  # ----------------------------
-  - name: Install backend dependencies
-    working-directory: ./backend
-    run: npm install --production
+      # ----------------------------
+      # Copy files to EC2
+      # ----------------------------
+      - name: Copy files to EC2 via SCP
+        uses: appleboy/scp-action@v0.1.7
+        with:
+          host: ${{ secrets.EC2_HOST }}
+          username: ${{ secrets.EC2_USER }}
+          key: ${{ secrets.EC2_SSH_KEY }}
+          source: |
+            frontend/dist/*
+            backend/*
+          target: /tmp/expense-tracker-deploy
 
-  # ----------------------------
-  # Copy files to EC2
-  # ----------------------------
-  - name: Copy files to EC2 via SCP
-    uses: appleboy/scp-action@v0.1.7
-    with:
-      host: ${{ secrets.EC2_HOST }}
-      username: ${{ secrets.EC2_USER }}
-      key: ${{ secrets.EC2_SSH_KEY }}
-      source: |
-        frontend/build/*
-        backend/*
-      target: /var/www
+      # ----------------------------
+      # Deploy on EC2
+      # ----------------------------
+      - name: Deploy via SSH
+        uses: appleboy/ssh-action@v1.0.3
+        with:
+          host: ${{ secrets.EC2_HOST }}
+          username: ${{ secrets.EC2_USER }}
+          key: ${{ secrets.EC2_SSH_KEY }}
+          script: |
+            # Create directories if not exist
+            mkdir -p /var/www/frontend
+            mkdir -p /var/www/backend
 
-  # ----------------------------
-  # Deploy on EC2
-  # ----------------------------
-  - name: Deploy via SSH
-    uses: appleboy/ssh-action@v1.0.3
-    with:
-      host: ${{ secrets.EC2_HOST }}
-      username: ${{ secrets.EC2_USER }}
-      key: ${{ secrets.EC2_SSH_KEY }}
-      script: |
-        # Create directories if not exist
-        mkdir -p /var/www/frontend
-        mkdir -p /var/www/backend
+            # Clean old files
+            rm -rf /var/www/frontend/*
+            rm -rf /var/www/backend/*
 
-        # Clean old files
-        rm -rf /var/www/frontend/*
-        rm -rf /var/www/backend/*
+            # Copy frontend build output and backend files from staging
+            cp -r /tmp/expense-tracker-deploy/frontend/dist/* /var/www/frontend/
+            cp -r /tmp/expense-tracker-deploy/backend/* /var/www/backend/
 
-        # Move new files
-        cp -r /var/www/frontend/build/* /var/www/frontend/ || true
-        cp -r /var/www/backend/* /var/www/backend/ || true
+            # Install backend deps (safety)
+            cd /var/www/backend
+            npm install --production
 
-        # Install backend deps (safety)
-        cd /var/www/backend
-        npm install --production
-
-        # Restart app using PM2
-        pm2 delete app || true
-        pm2 start index.js --name app
-        pm2 save
+            # Restart app using PM2
+            pm2 delete app || true
+            pm2 start server.js --name app
+            pm2 save
