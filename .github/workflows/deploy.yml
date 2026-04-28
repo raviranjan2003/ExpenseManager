@@ -95,8 +95,9 @@ jobs:
           username: ${{ secrets.EC2_USER }}
           key: ${{ secrets.EC2_SSH_KEY }}
           source: |
-            backend/
+            backend/*
           target: /var/www/backend/
+          strip_components: 1
       # ----------------------------
       # Deploy on EC2
       # ----------------------------
@@ -121,11 +122,25 @@ jobs:
               rm -rf /var/www/frontend/build 
             fi 
             
+            echo "Checking frontend files..."
+            ls -la /var/www/frontend/frontend/dist
+
+            echo "Checking backend files..."
+            ls -la /var/www/backend
+
             # BACKEND SETUP 
             cd /var/www/backend 
+            if [ ! -f "package.json" ]; then
+              echo "package.json not found in backend directory"
+              exit 1
+            fi
             npm install --production 
             
             # Restart backend with PM2 
+            if [ ! -f "server.js" ]; then
+              echo "server.js not found in backend directory"
+              exit 1
+            fi
             pm2 delete app || true 
             pm2 start server.js --name app 
             pm2 save 
