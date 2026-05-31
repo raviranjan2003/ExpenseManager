@@ -99,7 +99,10 @@ export default function Expenses() {
         y: {
           beginAtZero: true,
           grid: { color: 'rgba(148, 163, 184, 0.25)' },
-          ticks: { color: '#64748b' },
+          ticks: { 
+            color: '#64748b',
+            callback: (value) => `₹${value}`
+          },
         },
       },
     }),
@@ -338,7 +341,7 @@ export default function Expenses() {
                         {new Date(row.date).toLocaleDateString()}
                       </td>
                       <td className="px-4 py-3 text-right font-semibold text-ink-900">
-                        ${Number(row.amount).toFixed(2)}
+                        ₹{Number(row.amount).toFixed(2)}
                       </td>
                       <td className="px-4 py-3 text-right">
                         <button

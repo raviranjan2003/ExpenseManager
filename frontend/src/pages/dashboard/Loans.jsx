@@ -264,7 +264,7 @@ export default function Loans() {
                         {row.status}
                       </span>
                       <span className="text-sm font-bold text-ink-900">
-                        ${Number(row.amount).toFixed(2)}
+                        ₹{Number(row.amount).toFixed(2)}
                       </span>
                       <button
                         type="button"

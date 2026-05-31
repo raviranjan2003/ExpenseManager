@@ -18,7 +18,7 @@ export default function Landing() {
       <div className="pointer-events-none absolute bottom-0 left-0 h-72 w-72 rounded-full bg-indigo-500/15 blur-3xl" />
 
       <header className="relative z-10 mx-auto flex max-w-6xl items-center justify-between px-6 py-6">
-        <span className="font-display text-xl font-bold tracking-tight">EduFinance</span>
+        <span className="font-display text-xl font-bold tracking-tight">ExpenseTracker</span>
         <div className="flex items-center gap-3">
           <Link
             to="/signin"

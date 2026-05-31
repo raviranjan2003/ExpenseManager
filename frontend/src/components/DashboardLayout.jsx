@@ -29,7 +29,7 @@ export default function DashboardLayout() {
         >
           <div className="mb-8 px-2">
             <p className="font-display text-lg font-bold tracking-tight text-ink-900">
-              EduFinance
+              ExpenseTracker
             </p>
             <p className="mt-1 text-xs text-slate-500">Student Finance Manager</p>
           </div>
@@ -68,7 +68,7 @@ export default function DashboardLayout() {
 
         <div className="flex min-h-screen flex-1 flex-col">
           <header className="sticky top-0 z-10 flex items-center justify-between border-b border-slate-200/80 bg-white/80 px-4 py-3 backdrop-blur lg:hidden">
-            <span className="font-display font-bold text-ink-900">EduFinance</span>
+            <span className="font-display font-bold text-ink-900">ExpenseTracker</span>
             <button
               type="button"
               onClick={handleLogout}

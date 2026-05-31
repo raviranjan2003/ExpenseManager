@@ -53,7 +53,7 @@ export default function SignIn() {
       >
         <div className="text-center">
           <Link to="/" className="font-display text-xl font-bold text-ink-900">
-            EduFinance
+            ExpenseTracker
           </Link>
           <h1 className="mt-6 font-display text-2xl font-bold text-ink-900">Welcome back</h1>
           <p className="mt-2 text-sm text-slate-600">

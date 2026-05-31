@@ -40,7 +40,7 @@ export default function Overview() {
   const cards = [
     {
       title: 'Total recorded expenses',
-      value: loading ? '—' : `$${stats.expenseSum.toFixed(2)}`,
+      value: loading ? '—' : `₹${stats.expenseSum.toFixed(2)}`,
       hint: 'Across all categories',
       to: '/dashboard/expenses',
     },
