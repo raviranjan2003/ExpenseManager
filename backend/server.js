@@ -12,6 +12,7 @@ const loanRoutes = require('./routes/loanRoutes');
 const postRoutes = require('./routes/postRoutes');
 const commentRoutes = require('./routes/commentRoutes');
 const commentStandaloneRoutes = require('./routes/commentStandaloneRoutes');
+const friendRoutes = require('./routes/friendRoutes');
 
 connectDB();
 
@@ -35,6 +36,7 @@ app.use('/api/loans', loanRoutes);
 app.use('/api/posts', postRoutes);
 app.use('/api/posts/:postId/comments', commentRoutes);
 app.use('/api/comments', commentStandaloneRoutes);
+app.use('/api/friends', friendRoutes);
 
 app.use((req, res, next) => {
   res.status(404);

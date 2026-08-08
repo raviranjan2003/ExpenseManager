@@ -7,6 +7,7 @@ const nav = [
   { to: '/dashboard/expenses', label: 'Expenses', icon: '◇' },
   { to: '/dashboard/loans', label: 'Loans', icon: '◎' },
   { to: '/dashboard/forum', label: 'Forum', icon: '✦' },
+  { to: '/dashboard/friends', label: 'Friends', icon: '♡' },
 ];
 
 export default function DashboardLayout() {
