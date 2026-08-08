@@ -26,17 +26,17 @@ app.use(
 );
 app.use(express.json({ limit: '1mb' }));
 
-app.get('/api/api/health', (req, res) => {
+app.get('/api/health', (req, res) => {
   res.json({ status: 'ok', service: 'student-finance-manager-api' });
 });
 
-app.use('/api/api/auth', authRoutes);
-app.use('/api/api/expenses', expenseRoutes);
-app.use('/api/api/loans', loanRoutes);
-app.use('/api/api/posts', postRoutes);
-app.use('/api/api/posts/:postId/comments', commentRoutes);
-app.use('/api/api/comments', commentStandaloneRoutes);
-app.use('/api/api/friends', friendRoutes);
+app.use('/api/auth', authRoutes);
+app.use('/api/expenses', expenseRoutes);
+app.use('/api/loans', loanRoutes);
+app.use('/api/posts', postRoutes);
+app.use('/api/posts/:postId/comments', commentRoutes);
+app.use('/api/comments', commentStandaloneRoutes);
+app.use('/api/friends', friendRoutes);
 
 app.use((req, res, next) => {
   res.status(404);
